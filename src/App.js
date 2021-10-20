@@ -11,6 +11,8 @@ import FormLabel from '@material-ui/core/FormLabel';
 import { CSVLink, CSVDownload } from "react-csv";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ReactExport from "react-data-export";
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -31,6 +33,8 @@ function App() {
   const [noSamplingErr, setNoSamplingErr] = useState(true);
   const [noInterErr, setNoInterErr] = useState(true);
   const [noValidSheetErr, setNoValidSheetErr] = useState(false);
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
 
   useEffect(() => {
     setInput(document.getElementById('input'))
@@ -45,9 +49,16 @@ function App() {
       setNoFileErr(false);
       // input.addEventListener('change', () => {
       readXlsxFile(input.files[0], { getSheets: true }).then((names) => {
-        console.log(names);
+        console.log("names: ", names);
         // names === [{ name: 'Sheet1' }, { name: 'Sheet2' }]
-        setSheetsNames(names);
+        var nmes = [];
+        names.forEach(n => {
+          nmes.push({
+            name: n.name,
+            checked: false
+          })
+        })
+        setSheetsNames(nmes);
         setSheetsData([]);
         setNoInterErr(true);
         setNoSamplingErr(true);
@@ -71,10 +82,10 @@ function App() {
           rows: rows,
           checked: true
         });
-        if(names[index].name == '2021_Intercepts_TC0.5'){
+        if (names[index].name == from) {
           setNoInterErr(false);
         }
-        if(names[index].name == 'Sampling'){
+        if (names[index].name == to) {
           setNoSamplingErr(false);
         }
         setSheetsData(sheetsDt);
@@ -91,35 +102,28 @@ function App() {
     }
   }
 
-  const handleSheetSelect = (e, name) => {
-    // console.log('here')
-    setLoading(true);
-    var sheetsDt = sheetsData;
-    sheetsDt.forEach((sht) => {
-      if (sht.name == name) {
-        // console.log('found')
-        sht.checked = e.target.checked;
-      }
-    });
-    setSheetsData(sheetsDt);
-    // console.log('sheetsDt: ', sheetsDt);
-    setLoading(false);
+  const handleSheetSelect = (e, type) => {
+    if(type == 'from'){
+      setFrom(e.target.value)
+    } else {
+      setTo(e.target.value);
+    }
   }
 
   const filter = () => {
-    if(noInterErr || noSamplingErr){
-      setNoValidSheetErr(true);
-      return;
-    } else {
-      setNoValidSheetErr(false);
-    }
+    // if (noInterErr || noSamplingErr) {
+    //   setNoValidSheetErr(true);
+    //   return;
+    // } else {
+    //   setNoValidSheetErr(false);
+    // }
     var sheetsDt = sheetsData;
     //Copying headers
     setLoading(true);
     sheetsDt.forEach((sht) => {
-      if (sht.name == 'Sampling') {
+      if (sht.name == to) {
         sheetsDt.forEach((sheet) => {
-          if (sheet.name == '2021_Intercepts_TC0.5') {
+          if (sheet.name == from) {
             sheet.rows[0].forEach((el) => {
               sht.rows[0].push(el);
             })
@@ -129,11 +133,11 @@ function App() {
     });
     //merging
     sheetsDt.forEach((shttt, i) => {
-      if (shttt.name == 'Sampling') { // found target
+      if (shttt.name == to) { // found target
         shttt.rows.forEach((samplingEl, sampRowId) => { // loop rows
 
           sheetsDt.forEach((sheeet) => {
-            if (sheeet.name == '2021_Intercepts_TC0.5') { // found data source
+            if (sheeet.name == from) { // found data source
               sheeet.rows.forEach((interEl) => {
                 if (samplingEl[0] == interEl[0] && samplingEl[1] >= interEl[1] && samplingEl[1] < interEl[2]) { // comparing holes ids && making sure inter Depth From is between sample Depth From and Depth To
                   // console.log("in");
@@ -153,7 +157,7 @@ function App() {
     var selectedDt = null;
     var headersDt = null;
     sheetsDt.forEach((shhht, i) => {
-      if (shhht.name == 'Sampling') {
+      if (shhht.name == to) {
         selectedDt = shhht.rows;
       }
     });
@@ -193,18 +197,25 @@ function App() {
 
   return (
     <div className="App App-header">
-      <h4>Veuillez vous assurez que votre fichier Excel contient les sheets suivant: </h4>
+      <h4>Pour commencer Cliquez sure "Choose File". </h4>
       <ul style={{ fontSize: '1.1rem', textAlign: 'left' }}>
-        <li>2021_Intercepts_TC0.5</li>
-        <li>Sampling</li>
+        <li>Selectionnez votre fichier excel</li>
+        <li>Cliquez sure "Commencer"</li>
       </ul>
-      <h4>Veuillez egalement vous assurez que les column suivant correspond: </h4>
+      <h4>Veuillez vous assurez que les column suivant sont presentes et correspondes: </h4>
       <ul style={{ fontSize: '1.1rem', textAlign: 'left' }}>
         <li>A: Hole ID	</li>
         <li>B: Depth From</li>
         <li>C: Depth To</li>
       </ul>
-      <h4>Ce programme se chargera de copier les donnees de <strong style={{ textDecoration: 'underline' }}>2021_Intercepts_TC0.5</strong> a <strong style={{ textDecoration: 'underline' }}>Sampling</strong> en ce basant sur cette structure!</h4>
+      <h4>Ce programme se chargera de copier les donnees en ce basant sur cette structure!</h4>
+      <h4>Le programme affichera deux fois la meme liste </h4>
+      <ul style={{ fontSize: '1.1rem', textAlign: 'left' }}>
+        <li>En utilisant la liste de gauche, selection le sheet d'origine.</li>
+        <li>Puis utilisez la liste de droite pour selectionner le sheet de destination</li>
+        <li>Cliquez maintenant sur "GENERER"</li>
+        <li>Nommez votre fichier en precisant l'extension (.csv)</li>
+      </ul>
       <FormControl component="fieldset">
         {/* <FormLabel component="legend">Label Placement</FormLabel> */}
         <FormGroup aria-label="position" row style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -215,16 +226,32 @@ function App() {
             ) : null}
           </div>
           {noFileErr && (<span style={{ color: 'red', margin: '15px 0px' }}>Veuillez attacher un fichier excel. Cliquez sure "choose File"</span>)}
-          {sheetsData.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap', marginTop: '25px' }}>
-              {sheetsData.map((sheet, id) => (
-                <div key={'sheet' + id} className="mdc-touch-target-wrapper" style={{ display: 'flex', margin: '15px 5px', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' }}>
-                  <Checkbox color="primary" checked={true} onChange={(e) => handleSheetSelect(e, sheet.name)} />{sheet.name}
-                </div>))}
+          {sheetsNames.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap', marginTop: '55px' }}>
+              <FormControl component="fieldset" style={{borderRight: '1px solid white', marginRight: '15px'}}>
+                <FormLabel style={{color: 'white'}}>COPIER DE:</FormLabel>
+                <RadioGroup aria-label="gender" name="gender1" value={from} onChange={(e) => handleSheetSelect(e, 'from')}>
+                  {sheetsNames.map((n, id) => (
+                    <div key={'n' + id} className="mdc-touch-target-wrapper" style={{ display: 'flex', margin: '15px 5px', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' }}>
+                      {/* <Checkbox color="primary" checked={n.checked} onChange={(e) => handleSheetSelect(e, n.name)} />{n.name} */}
+                      <FormControlLabel value={n.name} control={<Radio />} label={n.name} />
+                    </div>))}
+                </RadioGroup>
+              </FormControl>
+              <FormControl component="fieldset">
+                <FormLabel style={{color: 'white'}}>ET COLLER DANS:</FormLabel>
+                <RadioGroup aria-label="gender" name="gender12" value={to} onChange={(e) => handleSheetSelect(e, 'to')}>
+                  {sheetsNames.map((n, id) => (
+                    <div key={'n-' + id} className="mdc-touch-target-wrapper" style={{ display: 'flex', margin: '15px 5px', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' }}>
+                      {/* <Checkbox color="primary" checked={n.checked} onChange={(e) => handleSheetSelect(e, n.name)} />{n.name} */}
+                      <FormControlLabel value={n.name} control={<Radio />} label={n.name} />
+                    </div>))}
+                </RadioGroup>
+              </FormControl>
             </div>
           )}
           {!loading && input && input.files[0] ? (
-            <Button style={{ backgroundColor: 'white', color: 'black' }} onClick={filter}>Generer</Button>
+            <Button style={{ backgroundColor: 'white', color: 'black', marginBottom: '15px'}} onClick={filter}>Generer</Button>
           ) : (<> {loading && <h4><CircularProgress /> Veuillez patienter... loading...</h4>} </>)}
           {noValidSheetErr && (
             <span style={{ color: 'red', margin: '15px 0px' }}>Veuillez attacher un fichier excel contenant un sheet <strong style={{ textDecoration: 'underline' }}>"2021_Intercepts_TC0.5"</strong> et <strong style={{ textDecoration: 'underline' }}>"Sampling"</strong> </span>
