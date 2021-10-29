@@ -139,7 +139,7 @@ function App() {
           sheetsDt.forEach((sheeet) => {
             if (sheeet.name == from) { // found data source
               sheeet.rows.forEach((interEl) => {
-                if (samplingEl[0] == interEl[0] && samplingEl[1] >= interEl[1] && samplingEl[1] < interEl[2]) { // comparing holes ids && making sure inter Depth From is between sample Depth From and Depth To
+                if (samplingEl[0] == interEl[0] && samplingEl[1] && interEl[1] && interEl[2] && Number(samplingEl[1].toString().replace(',', '.')) >= Number(interEl[1].toString().replace(',', '.')) && Number(samplingEl[1].toString().replace(',', '.')) < Number(interEl[2].toString().replace(',', '.'))) { // comparing holes ids && making sure inter Depth From is between sample Depth From and Depth To
                   // console.log("in");
                   interEl.forEach((tocopy) => { // then copy all to sampling
                     samplingEl.push(tocopy);
