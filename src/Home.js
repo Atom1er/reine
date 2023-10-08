@@ -103,7 +103,7 @@ function App() {
   }
 
   const handleSheetSelect = (e, type) => {
-    if(type == 'from'){
+    if (type == 'from') {
       setFrom(e.target.value)
     } else {
       setTo(e.target.value);
@@ -134,16 +134,37 @@ function App() {
     //merging
     sheetsDt.forEach((shttt, i) => {
       if (shttt.name == to) { // found target
-        shttt.rows.forEach((samplingEl, sampRowId) => { // loop rows
+        shttt.rows.forEach((toSamplingEl, sampRowId) => { // loop rows
 
-          sheetsDt.forEach((sheeet) => {
-            if (sheeet.name == from) { // found data source
-              sheeet.rows.forEach((interEl) => {
-                if (samplingEl[0] == interEl[0] && samplingEl[1] && interEl[1] && interEl[2] && Number(samplingEl[1].toString().replace(',', '.')) >= Number(interEl[1].toString().replace(',', '.')) && Number(samplingEl[1].toString().replace(',', '.')) < Number(interEl[2].toString().replace(',', '.'))) { // comparing holes ids && making sure inter Depth From is between sample Depth From and Depth To
-                  // console.log("in");
-                  interEl.forEach((tocopy) => { // then copy all to sampling
-                    samplingEl.push(tocopy);
-                  })
+          sheetsDt.forEach((fromSheeet) => {
+            if (fromSheeet.name == from) { // found data source
+              fromSheeet.rows.forEach((interEl) => {
+                if (toSamplingEl[1] == 0) {
+                  toSamplingEl[1] = '0'
+                }
+                if (toSamplingEl[2] == 0) {
+                  toSamplingEl[2] = '0'
+                }
+                if (toSamplingEl[0] == interEl[0]) { // comparing holes ids && making sure inter Depth From is between sample Depth From and Depth To
+                  // console.log("found hole id: ", toSamplingEl[0]);
+                  // console.log("getsin: ", toSamplingEl[1] && interEl[1] && interEl[2])
+                  // if ((toSamplingEl[1] && interEl[1] && interEl[2]) || (toSamplingEl[1] && interEl[1] && interEl[2]) === 0) { // comparing holes ids && making sure inter Depth From is between sample Depth From and Depth To
+                    // console.log("found all 3 toSamplingEl[1]: ", toSamplingEl[1]);
+                    // console.log("found all 3 toSamplingEl[2]: ", toSamplingEl[2]);
+                    // console.log("found all 3 interEl[1]: ", interEl[1]);
+                    // console.log("found all 3 interEl[2]: ", interEl[2]);
+                    if ( Number(toSamplingEl[1].toString().replace(',', '.')) >= Number(interEl[1].toString().replace(',', '.')) &&
+                      Number(toSamplingEl[1].toString().replace(',', '.')) < Number(interEl[2].toString().replace(',', '.'))) { // comparing holes ids && making sure inter Depth From is between sample Depth From and Depth To
+                      // console.log("in");
+                      interEl.forEach((tocopy) => { // then copy all to sampling
+                        toSamplingEl.push(tocopy);
+                      })
+                    } else {
+                      // console.log("No match:")
+                    }
+                  // } else {
+                  //   console.log("not in: ", )
+                  // }
                 }
               });
             }
@@ -228,8 +249,8 @@ function App() {
           {noFileErr && (<span style={{ color: 'red', margin: '15px 0px' }}>Veuillez attacher un fichier excel. Cliquez sure "choose File"</span>)}
           {sheetsNames.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap', marginTop: '55px' }}>
-              <FormControl component="fieldset" style={{borderRight: '1px solid white', marginRight: '15px'}}>
-                <FormLabel style={{color: 'white'}}>COPIER DE:</FormLabel>
+              <FormControl component="fieldset" style={{ borderRight: '1px solid white', marginRight: '15px' }}>
+                <FormLabel style={{ color: 'white' }}>COPIER DE:</FormLabel>
                 <RadioGroup aria-label="gender" name="gender1" value={from} onChange={(e) => handleSheetSelect(e, 'from')}>
                   {sheetsNames.map((n, id) => (
                     <div key={'n' + id} className="mdc-touch-target-wrapper" style={{ display: 'flex', margin: '15px 5px', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' }}>
@@ -239,7 +260,7 @@ function App() {
                 </RadioGroup>
               </FormControl>
               <FormControl component="fieldset">
-                <FormLabel style={{color: 'white'}}>ET COLLER DANS:</FormLabel>
+                <FormLabel style={{ color: 'white' }}>ET COLLER DANS:</FormLabel>
                 <RadioGroup aria-label="gender" name="gender12" value={to} onChange={(e) => handleSheetSelect(e, 'to')}>
                   {sheetsNames.map((n, id) => (
                     <div key={'n-' + id} className="mdc-touch-target-wrapper" style={{ display: 'flex', margin: '15px 5px', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' }}>
@@ -251,7 +272,7 @@ function App() {
             </div>
           )}
           {!loading && input && input.files[0] ? (
-            <Button style={{ backgroundColor: 'white', color: 'black', marginBottom: '15px'}} onClick={filter}>Generer</Button>
+            <Button style={{ backgroundColor: 'white', color: 'black', marginBottom: '15px' }} onClick={filter}>Generer</Button>
           ) : (<> {loading && <h4><CircularProgress /> Veuillez patienter... loading...</h4>} </>)}
           {noValidSheetErr && (
             <span style={{ color: 'red', margin: '15px 0px' }}>Veuillez attacher un fichier excel contenant un sheet <strong style={{ textDecoration: 'underline' }}>"2021_Intercepts_TC0.5"</strong> et <strong style={{ textDecoration: 'underline' }}>"Sampling"</strong> </span>
